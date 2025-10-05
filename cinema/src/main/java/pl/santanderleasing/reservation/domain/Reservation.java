@@ -1,5 +1,10 @@
 package pl.santanderleasing.reservation.domain;
 
+import pl.santanderleasing.commons.DomainEvent;
+import pl.santanderleasing.commons.ReservationCancelledEvent;
+import pl.santanderleasing.commons.ReservationConfirmedEvent;
+import pl.santanderleasing.commons.TicketsReservedEvent;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,7 +41,6 @@ public final class Reservation {
         this.createdAt = Objects.requireNonNull(createdAt, "CreatedAt cannot be null");
         this.domainEvents = new ArrayList<>();
         this.version = version;
-        // validate core aggregate rules - internal consistency checks without external dependencies
         ensureReservationCoreRulesAreRespected();
 
     }
@@ -71,7 +75,7 @@ public final class Reservation {
 
         reservation.addDomainEvent(
                 TicketsReservedEvent.create(
-                        reservation.id,
+                        reservation.id.value(),
                         userId,
                         showTimeId,
                         seatPositions
@@ -90,6 +94,15 @@ public final class Reservation {
             ReservationStatus status,
             Instant createdAt, long version) {
         return new Reservation(id, userId, showTimeId, screeningTime, reservedSeats, status, createdAt, version);
+    }
+
+    public void completeReservation() {
+        if (this.status != ReservationStatus.SUBMITTED) {
+            throw new IllegalStateException("Reservation can only be reserved from SUBMITTED state");
+        }
+        this.status = ReservationStatus.RESERVED;
+        incrementVersion();
+        addDomainEvent(new ReservationConfirmedEvent(getId().value(), Instant.now()));
     }
 
     public void cancel(boolean isPowerVIPClient) {

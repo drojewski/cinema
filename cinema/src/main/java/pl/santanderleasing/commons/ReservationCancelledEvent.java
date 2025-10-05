@@ -1,4 +1,7 @@
-package pl.santanderleasing.reservation.domain;
+package pl.santanderleasing.commons;
+
+import pl.santanderleasing.reservation.domain.ReservationId;
+import pl.santanderleasing.reservation.domain.ShowTimeId;
 
 import java.time.Instant;
 import java.util.Objects;

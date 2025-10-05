@@ -1,5 +1,6 @@
 package pl.santanderleasing.reservation.application;
 
+import pl.santanderleasing.commons.DomainEventPublisher;
 import pl.santanderleasing.reservation.domain.*;
 
 import java.time.LocalDateTime;
@@ -30,9 +31,7 @@ public class ReservationApplicationService {
     // todo: optimistic locking
     public ReservationId reserveTickets(ReserveTicketsCommand command) {
         Objects.requireNonNull(command, "ReserveTicketsCommand cannot be null");
-
         LocalDateTime screeningTime = showTimeRepository.findScreeningTimeBy(command.showTimeId());
-
         Reservation reservation = Reservation.create(
                 command.userId(),
                 command.showTimeId(),
@@ -40,29 +39,24 @@ public class ReservationApplicationService {
                 command.seatPositions(),
                 seatAvailabilityChecker
         );
-
         reservationRepository.save(reservation);
         publishDomainEvents(reservation);
-
         return reservation.getId();
     }
 
     // tx
     public void cancelReservation(CancelReservationCommand command) {
         Objects.requireNonNull(command, "CancelReservationCommand cannot be null");
-
         Reservation reservation = reservationRepository.findBy(command.reservationId())
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found: " + command.reservationId()));
 
         if (!reservation.getUserId().equals(command.userId())) {
-            throw new IllegalArgumentException("Reservation ownership mismatch 8-O");
+            throw new IllegalArgumentException("Reservation ownership mismatch :-(");
         }
 
         // may be moved to domain service if logic becomes more complex
         boolean isPowerVIPClient = loyaltyProgramService.isPowerVIPClient(command.userId());
-
         reservation.cancel(isPowerVIPClient);
-
         reservationRepository.save(reservation);
         publishDomainEvents(reservation);
     }

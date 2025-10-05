@@ -1,6 +1,10 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import pl.santanderleasing.commons.DomainEvent;
+import pl.santanderleasing.commons.ReservationCancelledEvent;
+import pl.santanderleasing.commons.ReservationConfirmedEvent;
+import pl.santanderleasing.commons.TicketsReservedEvent;
 import pl.santanderleasing.reservation.domain.*;
 
 import java.time.Instant;
@@ -37,7 +41,7 @@ class ReservationTest {
 
         Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
 
-        assertEquals(ReservationStatus.RESERVED, reservation.getStatus());
+        assertEquals(ReservationStatus.SUBMITTED, reservation.getStatus());
 
         List<DomainEvent> events = reservation.getAndClearDomainEvents();
         assertEquals(1, events.size());
@@ -84,6 +88,32 @@ class ReservationTest {
     }
 
     @Test
+    void should_completeReservation_reservation() {
+        when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
+
+        Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
+        assertEquals(ReservationStatus.SUBMITTED, reservation.getStatus());
+
+        reservation.completeReservation();
+        assertEquals(ReservationStatus.RESERVED, reservation.getStatus());
+
+        List<DomainEvent> events = reservation.getAndClearDomainEvents();
+        assertEquals(2, events.size());
+        assertTrue(events.stream().anyMatch(e -> e instanceof ReservationConfirmedEvent));
+    }
+
+    @Test
+    void should_throw_if_completeReservation_when_not_submitted() {
+        when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
+
+        Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
+        reservation.completeReservation();
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, reservation::completeReservation);
+        assertEquals("Reservation can only be reserved from SUBMITTED state", ex.getMessage());
+    }
+
+    @Test
     void should_cancel_reservation_with_full_refund() {
         List<ReservedSeat> reservedSeats = seatPositions.stream()
                 .map(ReservedSeat::create)
@@ -100,7 +130,6 @@ class ReservationTest {
                 0L);
 
         reservation.cancel(true);
-
         assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
 
         List<DomainEvent> events = reservation.getAndClearDomainEvents();
@@ -130,7 +159,6 @@ class ReservationTest {
                 0L);
 
         reservation.cancel(false);
-
         assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
 
         List<DomainEvent> events = reservation.getAndClearDomainEvents();
@@ -158,7 +186,6 @@ class ReservationTest {
                 0L);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> reservation.cancel(true));
-
         assertEquals("Cannot cancel reservation that is not in RESERVED status", ex.getMessage());
     }
 }

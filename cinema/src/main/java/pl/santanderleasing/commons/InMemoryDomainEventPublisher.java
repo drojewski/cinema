@@ -1,7 +1,4 @@
-package pl.santanderleasing.reservation.infrastructure;
-
-import pl.santanderleasing.reservation.domain.DomainEvent;
-import pl.santanderleasing.reservation.domain.DomainEventPublisher;
+package pl.santanderleasing.commons;
 
 public class InMemoryDomainEventPublisher implements DomainEventPublisher {
     @Override

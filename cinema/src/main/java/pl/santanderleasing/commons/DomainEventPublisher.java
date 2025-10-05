@@ -1,4 +1,4 @@
-package pl.santanderleasing.reservation.domain;
+package pl.santanderleasing.commons;
 
 public interface DomainEventPublisher {
     void publish(DomainEvent event);

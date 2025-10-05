@@ -1,4 +1,4 @@
-package pl.santanderleasing.reservation.domain;
+package pl.santanderleasing.commons;
 
 import java.time.Instant;
 

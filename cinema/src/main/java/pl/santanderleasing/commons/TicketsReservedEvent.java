@@ -1,11 +1,14 @@
-package pl.santanderleasing.reservation.domain;
+package pl.santanderleasing.commons;
+
+import pl.santanderleasing.reservation.domain.SeatPosition;
+import pl.santanderleasing.reservation.domain.ShowTimeId;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 public record TicketsReservedEvent(
-        ReservationId reservationId,
+        String reservationId,
         String userId,
         ShowTimeId showTimeId,
         List<SeatPosition> seatPositions,
@@ -19,7 +22,7 @@ public record TicketsReservedEvent(
     }
 
     public static TicketsReservedEvent create(
-            ReservationId reservationId,
+            String reservationId,
             String userId,
             ShowTimeId showTimeId,
             List<SeatPosition> seatPositions
@@ -36,5 +39,10 @@ public record TicketsReservedEvent(
     @Override
     public Instant occurredAt() {
         return Instant.now();
+    }
+
+    @Override
+    public String reservationId() {
+        return reservationId;
     }
 }
