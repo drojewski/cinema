@@ -2,8 +2,8 @@ package pl.santanderleasing.reservation.domain;
 
 import pl.santanderleasing.commons.DomainEvent;
 import pl.santanderleasing.commons.ReservationCancelledEvent;
-import pl.santanderleasing.commons.ReservationConfirmedEvent;
-import pl.santanderleasing.commons.TicketsReservedEvent;
+import pl.santanderleasing.commons.ReservationPaidEvent;
+import pl.santanderleasing.commons.ReservationSubmittedEvent;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -45,7 +45,7 @@ public final class Reservation {
 
     }
 
-    public static Reservation create(
+    public static Reservation submit(
             String userId,
             ShowTimeId showTimeId,
             LocalDateTime screeningTime,
@@ -74,7 +74,7 @@ public final class Reservation {
                 0L);
 
         reservation.addDomainEvent(
-                TicketsReservedEvent.create(
+                ReservationSubmittedEvent.create(
                         reservation.id.value(),
                         userId,
                         showTimeId,
@@ -100,18 +100,18 @@ public final class Reservation {
         if (this.status != ReservationStatus.SUBMITTED) {
             throw new IllegalStateException("Reservation can only be reserved from SUBMITTED state");
         }
-        this.status = ReservationStatus.CONFIRMED;
+        this.status = ReservationStatus.PAID;
         incrementVersion();
-        addDomainEvent(new ReservationConfirmedEvent(getId().value(), Instant.now()));
+        addDomainEvent(new ReservationPaidEvent(getId().value(), Instant.now()));
     }
 
-    public void cancel(boolean isPowerVIPClient) {
-        if (status != ReservationStatus.CONFIRMED) {
+    public void cancel(boolean isEntitledToCancelWithFullRefund) {
+        if (status != ReservationStatus.PAID) {
             throw new IllegalStateException("Cannot cancel reservation that is not in RESERVED status");
         }
 
         boolean isLessThanOneHour = isLessThanOneHourBefore(LocalDateTime.now());
-        boolean fullRefund = isPowerVIPClient || !isLessThanOneHour;
+        boolean fullRefund = isEntitledToCancelWithFullRefund || !isLessThanOneHour;
 
         addDomainEvent(ReservationCancelledEvent.create(id, userId, showTimeId, fullRefund));
         this.status = ReservationStatus.CANCELLED;

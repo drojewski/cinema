@@ -6,7 +6,7 @@ import pl.santanderleasing.reservation.domain.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class ReservationApplicationService {
+public class SubmitReservationService {
 
     private final ReservationRepository reservationRepository;
     private final SeatAvailabilityChecker seatAvailabilityChecker;
@@ -14,7 +14,7 @@ public class ReservationApplicationService {
     private final ShowTimeRepository showTimeRepository;
     private final DomainEventPublisher domainEventPublisher;
 
-    public ReservationApplicationService(
+    public SubmitReservationService(
             ReservationRepository reservationRepository,
             SeatAvailabilityChecker seatAvailabilityChecker,
             LoyaltyProgramService loyaltyProgramService,
@@ -29,10 +29,10 @@ public class ReservationApplicationService {
 
     // tx
     // todo: optimistic locking
-    public ReservationId reserveTickets(ReserveTicketsCommand command) {
-        Objects.requireNonNull(command, "ReserveTicketsCommand cannot be null");
+    public ReservationId submit(SubmitReservationCommand command) {
+        Objects.requireNonNull(command, "SubmitReservationCommand cannot be null");
         LocalDateTime screeningTime = showTimeRepository.findScreeningTimeBy(command.showTimeId());
-        Reservation reservation = Reservation.create(
+        Reservation reservation = Reservation.submit(
                 command.userId(),
                 command.showTimeId(),
                 screeningTime,
@@ -55,8 +55,8 @@ public class ReservationApplicationService {
         }
 
         // may be moved to domain service if logic becomes more complex
-        boolean isPowerVIPClient = loyaltyProgramService.isPowerVIPClient(command.userId());
-        reservation.cancel(isPowerVIPClient);
+        boolean isEntitledToCancelWithFullRefund = loyaltyProgramService.isEntitledToCancelWithFullRefund(command.userId());
+        reservation.cancel(isEntitledToCancelWithFullRefund);
         reservationRepository.save(reservation);
         publishDomainEvents(reservation);
     }

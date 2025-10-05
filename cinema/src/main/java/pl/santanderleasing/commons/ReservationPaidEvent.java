@@ -3,17 +3,17 @@ package pl.santanderleasing.commons;
 import java.time.Instant;
 import java.util.Objects;
 
-public record ReservationConfirmedEvent(
+public record ReservationPaidEvent(
         String reservationId,
         Instant occurredOn) implements DomainEvent {
-    public ReservationConfirmedEvent {
+    public ReservationPaidEvent {
         Objects.requireNonNull(reservationId, "ReservationId cannot be null");
         Objects.requireNonNull(occurredOn, "OccurredOn cannot be null");
     }
 
-    public static ReservationConfirmedEvent create(
+    public static ReservationPaidEvent create(
             String reservationId) {
-        return new ReservationConfirmedEvent(reservationId, Instant.now());
+        return new ReservationPaidEvent(reservationId, Instant.now());
     }
 
     @Override

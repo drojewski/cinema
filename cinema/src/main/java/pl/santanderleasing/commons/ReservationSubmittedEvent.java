@@ -7,13 +7,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
-public record TicketsReservedEvent(
+public record ReservationSubmittedEvent(
         String reservationId,
         String userId,
         ShowTimeId showTimeId,
         List<SeatPosition> seatPositions,
         Instant occurredOn) implements DomainEvent {
-    public TicketsReservedEvent {
+    public ReservationSubmittedEvent {
         Objects.requireNonNull(reservationId, "ReservationId cannot be null");
         Objects.requireNonNull(userId, "UserId cannot be null");
         Objects.requireNonNull(showTimeId, "ShowTimeId cannot be null");
@@ -21,13 +21,13 @@ public record TicketsReservedEvent(
         Objects.requireNonNull(occurredOn, "OccurredOn cannot be null");
     }
 
-    public static TicketsReservedEvent create(
+    public static ReservationSubmittedEvent create(
             String reservationId,
             String userId,
             ShowTimeId showTimeId,
             List<SeatPosition> seatPositions
     ) {
-        return new TicketsReservedEvent(
+        return new ReservationSubmittedEvent(
                 reservationId,
                 userId,
                 showTimeId,
