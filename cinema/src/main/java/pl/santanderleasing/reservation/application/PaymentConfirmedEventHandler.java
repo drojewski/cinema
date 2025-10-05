@@ -25,7 +25,7 @@ public class PaymentConfirmedEventHandler {
 
         if (reservationOpt.isPresent()) {
             Reservation reservation = reservationOpt.get();
-            reservation.completeReservation();
+            reservation.confirm();
             reservationRepository.save(reservation);
             reservation.getAndClearDomainEvents().forEach(domainEventPublisher::publish);
         } else {

@@ -96,17 +96,17 @@ public final class Reservation {
         return new Reservation(id, userId, showTimeId, screeningTime, reservedSeats, status, createdAt, version);
     }
 
-    public void completeReservation() {
+    public void confirm() {
         if (this.status != ReservationStatus.SUBMITTED) {
             throw new IllegalStateException("Reservation can only be reserved from SUBMITTED state");
         }
-        this.status = ReservationStatus.RESERVED;
+        this.status = ReservationStatus.CONFIRMED;
         incrementVersion();
         addDomainEvent(new ReservationConfirmedEvent(getId().value(), Instant.now()));
     }
 
     public void cancel(boolean isPowerVIPClient) {
-        if (status != ReservationStatus.RESERVED) {
+        if (status != ReservationStatus.CONFIRMED) {
             throw new IllegalStateException("Cannot cancel reservation that is not in RESERVED status");
         }
 

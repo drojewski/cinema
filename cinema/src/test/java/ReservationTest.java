@@ -40,7 +40,6 @@ class ReservationTest {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
 
         Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
-
         assertEquals(ReservationStatus.SUBMITTED, reservation.getStatus());
 
         List<DomainEvent> events = reservation.getAndClearDomainEvents();
@@ -80,22 +79,22 @@ class ReservationTest {
                 showTimeId,
                 screeningTime,
                 reservedSeats,
-                ReservationStatus.RESERVED,
+                ReservationStatus.CONFIRMED,
                 Instant.now(),
                 0L);
 
-        assertEquals(ReservationStatus.RESERVED, reservation.getStatus());
+        assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
     }
 
     @Test
-    void should_completeReservation_reservation() {
+    void should_confirm() {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
 
         Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
         assertEquals(ReservationStatus.SUBMITTED, reservation.getStatus());
 
-        reservation.completeReservation();
-        assertEquals(ReservationStatus.RESERVED, reservation.getStatus());
+        reservation.confirm();
+        assertEquals(ReservationStatus.CONFIRMED, reservation.getStatus());
 
         List<DomainEvent> events = reservation.getAndClearDomainEvents();
         assertEquals(2, events.size());
@@ -103,13 +102,13 @@ class ReservationTest {
     }
 
     @Test
-    void should_throw_if_completeReservation_when_not_submitted() {
+    void should_throw_if_confirm_when_not_submitted() {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
 
         Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
-        reservation.completeReservation();
+        reservation.confirm();
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, reservation::completeReservation);
+        IllegalStateException ex = assertThrows(IllegalStateException.class, reservation::confirm);
         assertEquals("Reservation can only be reserved from SUBMITTED state", ex.getMessage());
     }
 
@@ -125,7 +124,7 @@ class ReservationTest {
                 showTimeId,
                 screeningTime,
                 reservedSeats,
-                ReservationStatus.RESERVED,
+                ReservationStatus.CONFIRMED,
                 Instant.now(),
                 0L);
 
@@ -154,7 +153,7 @@ class ReservationTest {
                 showTimeId,
                 closeShowTime,
                 reservedSeats,
-                ReservationStatus.RESERVED,
+                ReservationStatus.CONFIRMED,
                 Instant.now(),
                 0L);
 
