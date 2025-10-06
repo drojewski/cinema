@@ -107,7 +107,7 @@ public final class Reservation {
 
     public void cancel(boolean isEntitledToCancelWithFullRefund) {
         if (status != ReservationStatus.PAID) {
-            throw new IllegalStateException("Cannot cancel reservation that is not in RESERVED status");
+            throw new IllegalStateException("Cannot cancel reservation that is not in PAID status");
         }
 
         boolean isLessThanOneHour = isLessThanOneHourBefore(LocalDateTime.now());
