@@ -4,7 +4,7 @@ import pl.santanderleasing.reservation.domain.LoyaltyProgramService;
 
 public class InMemoryLoyaltyProgramService implements LoyaltyProgramService {
     @Override
-    public boolean isEntitledToCancelWithFullRefund(String userId) {
+    public boolean isCinemaCardGoldOwner(String userId) {
         return true;
     }
 }

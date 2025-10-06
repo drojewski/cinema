@@ -1,5 +1,5 @@
 package pl.santanderleasing.reservation.domain;
 
 public interface LoyaltyProgramService {
-    boolean isEntitledToCancelWithFullRefund(String userId);
+    boolean isCinemaCardGoldOwner(String userId);
 }

@@ -55,7 +55,7 @@ public class SubmitReservationService {
         }
 
         // may be moved to domain service if logic becomes more complex
-        boolean isEntitledToCancelWithFullRefund = loyaltyProgramService.isEntitledToCancelWithFullRefund(command.userId());
+        boolean isEntitledToCancelWithFullRefund = loyaltyProgramService.isCinemaCardGoldOwner(command.userId());
         reservation.cancel(isEntitledToCancelWithFullRefund);
         reservationRepository.save(reservation);
         publishDomainEvents(reservation);
