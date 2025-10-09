@@ -28,7 +28,6 @@ public class SubmitReservationService {
     }
 
     // tx
-    // todo: optimistic locking
     public ReservationId submit(SubmitReservationCommand command) {
         Objects.requireNonNull(command, "SubmitReservationCommand cannot be null");
         LocalDateTime screeningTime = showTimeRepository.findScreeningTimeBy(command.showTimeId());
