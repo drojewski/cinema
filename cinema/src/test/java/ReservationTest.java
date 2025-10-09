@@ -169,7 +169,7 @@ class ReservationTest {
     }
 
     @Test
-    void should_throw_if_try_to_cancel_not_reserved_reservation() {
+    void should_throw_if_try_to_cancel_not_paid_reservation() {
         List<ReservedSeat> reservedSeats = seatPositions.stream()
                 .map(ReservedSeat::create)
                 .toList();
@@ -185,6 +185,6 @@ class ReservationTest {
                 0L);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> reservation.cancel(true));
-        assertEquals("Cannot cancel reservation that is not in RESERVED status", ex.getMessage());
+        assertEquals("Cannot cancel reservation that is not in PAID status", ex.getMessage());
     }
 }
