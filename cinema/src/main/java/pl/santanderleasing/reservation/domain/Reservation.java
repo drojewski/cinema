@@ -3,7 +3,6 @@ package pl.santanderleasing.reservation.domain;
 import pl.santanderleasing.commons.DomainEvent;
 import pl.santanderleasing.commons.ReservationCancelledEvent;
 import pl.santanderleasing.commons.ReservationPaidEvent;
-import pl.santanderleasing.commons.ReservationCreatedEvent;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -23,7 +22,7 @@ public final class Reservation {
     private final List<DomainEvent> domainEvents;
     private long version;
 
-    private Reservation(
+    Reservation(
             ReservationId id,
             String userId,
             ShowTimeId showTimeId,
@@ -42,58 +41,6 @@ public final class Reservation {
         this.domainEvents = new ArrayList<>();
         this.version = version;
         ensureReservationCoreRulesAreRespected();
-
-    }
-
-    public static Reservation create(
-            String userId,
-            ShowTimeId showTimeId,
-            LocalDateTime screeningTime,
-            List<SeatPosition> seatPositions,
-            SeatAvailabilityChecker availabilityChecker) {
-
-        Objects.requireNonNull(seatPositions, "SeatPositions cannot be null");
-        Objects.requireNonNull(availabilityChecker, "SeatAvailabilityChecker cannot be null");
-
-        if (!availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)) {
-            throw new IllegalStateException("One or more seats are not available");
-        }
-
-        List<ReservedSeat> seats = seatPositions.stream()
-                .map(ReservedSeat::create)
-                .toList();
-
-        Reservation reservation = new Reservation(
-                ReservationId.generate(),
-                userId,
-                showTimeId,
-                screeningTime,
-                seats,
-                ReservationStatus.CREATED,
-                Instant.now(),
-                0L);
-
-        reservation.addDomainEvent(
-                ReservationCreatedEvent.create(
-                        reservation.id.value(),
-                        userId,
-                        showTimeId,
-                        seatPositions
-                )
-        );
-        return reservation;
-    }
-
-    // aggregate lifecycle - chapter 6
-    public static Reservation reconstitute(
-            ReservationId id,
-            String userId,
-            ShowTimeId showTimeId,
-            LocalDateTime screeningTime,
-            List<ReservedSeat> reservedSeats,
-            ReservationStatus status,
-            Instant createdAt, long version) {
-        return new Reservation(id, userId, showTimeId, screeningTime, reservedSeats, status, createdAt, version);
     }
 
     public void confirm() {
@@ -118,7 +65,6 @@ public final class Reservation {
         incrementVersion();
     }
 
-    // invariants - specific rules that can be verified by the aggregate's own knowledge without external deps
     private void ensureReservationCoreRulesAreRespected() {
         if (reservedSeats.isEmpty()) {
             throw new IllegalStateException("Reservation must have at least one seat");
@@ -129,7 +75,7 @@ public final class Reservation {
         }
     }
 
-    private void addDomainEvent(DomainEvent event) {
+    void addDomainEvent(DomainEvent event) {
         domainEvents.add(event);
     }
 
@@ -137,6 +83,26 @@ public final class Reservation {
         List<DomainEvent> events = new ArrayList<>(domainEvents);
         domainEvents.clear();
         return events;
+    }
+
+    public static Reservation reconstitute(
+            ReservationId id,
+            String userId,
+            ShowTimeId showTimeId,
+            LocalDateTime screeningTime,
+            List<ReservedSeat> reservedSeats,
+            ReservationStatus status,
+            Instant createdAt,
+            long version) {
+        return new Reservation(id, userId, showTimeId, screeningTime, reservedSeats, status, createdAt, version);
+    }
+
+    private boolean isLessThanOneHourBefore(LocalDateTime currentTime) {
+        return screeningTime.isBefore(currentTime.plusHours(1));
+    }
+
+    private void incrementVersion() {
+        this.version++;
     }
 
     public ReservationId getId() {
@@ -155,28 +121,20 @@ public final class Reservation {
         return version;
     }
 
-    private boolean isLessThanOneHourBefore(LocalDateTime currentTime) {
-        return screeningTime.isBefore(currentTime.plusHours(1));
-    }
 
-    private void incrementVersion() {
-        this.version++;
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Reservation that = (Reservation) o;
+        if (!(o instanceof Reservation that)) return false;
         return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
     }
 }

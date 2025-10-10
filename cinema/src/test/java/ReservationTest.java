@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 class ReservationTest {
 
     private SeatAvailabilityChecker availabilityChecker;
+    private ReservationFactory reservationFactory;
     private LocalDateTime screeningTime;
     private ShowTimeId showTimeId;
     private String userId;
@@ -25,6 +26,7 @@ class ReservationTest {
     @BeforeEach
     void setUp() {
         availabilityChecker = Mockito.mock(SeatAvailabilityChecker.class);
+        reservationFactory = new ReservationFactory(availabilityChecker);
         showTimeId = ShowTimeId.of("show-1");
         screeningTime = LocalDateTime.now().plusHours(2);
         userId = "user123";
@@ -39,7 +41,7 @@ class ReservationTest {
     void should_create_reservation() {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
 
-        Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
+        Reservation reservation = reservationFactory.create(userId, showTimeId, screeningTime, seatPositions);
         assertEquals(ReservationStatus.CREATED, reservation.getStatus());
 
         List<DomainEvent> events = reservation.getAndClearDomainEvents();
@@ -52,7 +54,7 @@ class ReservationTest {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(false);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
-                Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker));
+                reservationFactory.create(userId, showTimeId, screeningTime, seatPositions));
 
         assertEquals("One or more seats are not available", ex.getMessage());
     }
@@ -62,7 +64,7 @@ class ReservationTest {
         when(availabilityChecker.areSeatsAvailable(showTimeId, List.of())).thenReturn(true);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
-                Reservation.create(userId, showTimeId, screeningTime, List.of(), availabilityChecker));
+                reservationFactory.create(userId, showTimeId, screeningTime, List.of()));
 
         assertEquals("Reservation must have at least one seat", ex.getMessage());
     }
@@ -90,7 +92,7 @@ class ReservationTest {
     void should_confirm() {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
 
-        Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
+        Reservation reservation = reservationFactory.create(userId, showTimeId, screeningTime, seatPositions);
         assertEquals(ReservationStatus.CREATED, reservation.getStatus());
 
         reservation.confirm();
@@ -105,7 +107,7 @@ class ReservationTest {
     void should_throw_if_confirm_when_not_created() {
         when(availabilityChecker.areSeatsAvailable(showTimeId, seatPositions)).thenReturn(true);
 
-        Reservation reservation = Reservation.create(userId, showTimeId, screeningTime, seatPositions, availabilityChecker);
+        Reservation reservation = reservationFactory.create(userId, showTimeId, screeningTime, seatPositions);
         reservation.confirm();
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, reservation::confirm);
