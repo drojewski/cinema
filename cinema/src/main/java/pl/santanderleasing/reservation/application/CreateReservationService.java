@@ -6,7 +6,7 @@ import pl.santanderleasing.reservation.domain.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class SubmitReservationService {
+public class CreateReservationService {
 
     private final ReservationRepository reservationRepository;
     private final SeatAvailabilityChecker seatAvailabilityChecker;
@@ -14,7 +14,7 @@ public class SubmitReservationService {
     private final ShowTimeRepository showTimeRepository;
     private final DomainEventPublisher domainEventPublisher;
 
-    public SubmitReservationService(
+    public CreateReservationService(
             ReservationRepository reservationRepository,
             SeatAvailabilityChecker seatAvailabilityChecker,
             LoyaltyProgramService loyaltyProgramService,
@@ -28,10 +28,10 @@ public class SubmitReservationService {
     }
 
     // tx
-    public ReservationId submit(SubmitReservationCommand command) {
-        Objects.requireNonNull(command, "SubmitReservationCommand cannot be null");
+    public ReservationId create(CreateReservationCommand command) {
+        Objects.requireNonNull(command, "CreateReservationCommand cannot be null");
         LocalDateTime screeningTime = showTimeRepository.findScreeningTimeBy(command.showTimeId());
-        Reservation reservation = Reservation.submit(
+        Reservation reservation = Reservation.create(
                 command.userId(),
                 command.showTimeId(),
                 screeningTime,

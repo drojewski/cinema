@@ -3,7 +3,7 @@ package pl.santanderleasing.reservation.domain;
 import pl.santanderleasing.commons.DomainEvent;
 import pl.santanderleasing.commons.ReservationCancelledEvent;
 import pl.santanderleasing.commons.ReservationPaidEvent;
-import pl.santanderleasing.commons.ReservationSubmittedEvent;
+import pl.santanderleasing.commons.ReservationCreatedEvent;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -45,7 +45,7 @@ public final class Reservation {
 
     }
 
-    public static Reservation submit(
+    public static Reservation create(
             String userId,
             ShowTimeId showTimeId,
             LocalDateTime screeningTime,
@@ -69,12 +69,12 @@ public final class Reservation {
                 showTimeId,
                 screeningTime,
                 seats,
-                ReservationStatus.SUBMITTED,
+                ReservationStatus.CREATED,
                 Instant.now(),
                 0L);
 
         reservation.addDomainEvent(
-                ReservationSubmittedEvent.create(
+                ReservationCreatedEvent.create(
                         reservation.id.value(),
                         userId,
                         showTimeId,
@@ -97,8 +97,8 @@ public final class Reservation {
     }
 
     public void confirm() {
-        if (this.status != ReservationStatus.SUBMITTED) {
-            throw new IllegalStateException("Reservation can only be reserved from SUBMITTED state");
+        if (this.status != ReservationStatus.CREATED) {
+            throw new IllegalStateException("Reservation can only be reserved from CREATED state");
         }
         this.status = ReservationStatus.PAID;
         incrementVersion();

@@ -1,7 +1,7 @@
 package pl.santanderleasing.reservation.domain;
 
 public enum ReservationStatus {
-    SUBMITTED,
+    CREATED,
     PAID,
     CANCELLED
 }

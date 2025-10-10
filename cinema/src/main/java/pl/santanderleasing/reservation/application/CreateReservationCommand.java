@@ -6,12 +6,12 @@ import pl.santanderleasing.reservation.domain.ShowTimeId;
 import java.util.List;
 import java.util.Objects;
 
-public record SubmitReservationCommand(
+public record CreateReservationCommand(
         String userId,
         ShowTimeId showTimeId,
         List<SeatPosition> seatPositions
 ) {
-    public SubmitReservationCommand {
+    public CreateReservationCommand {
         Objects.requireNonNull(userId, "UserId cannot be null");
         Objects.requireNonNull(showTimeId, "ShowTimeId cannot be null");
         Objects.requireNonNull(seatPositions, "SeatPositions cannot be null");
