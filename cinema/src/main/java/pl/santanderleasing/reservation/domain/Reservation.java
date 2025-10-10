@@ -43,28 +43,6 @@ public final class Reservation {
         ensureReservationCoreRulesAreRespected();
     }
 
-    public void confirm() {
-        if (this.status != ReservationStatus.CREATED) {
-            throw new IllegalStateException("Reservation can only be reserved from CREATED state");
-        }
-        this.status = ReservationStatus.PAID;
-        incrementVersion();
-        addDomainEvent(new ReservationPaidEvent(getId().value(), Instant.now()));
-    }
-
-    public void cancel(boolean isEntitledToCancelWithFullRefund) {
-        if (status != ReservationStatus.PAID) {
-            throw new IllegalStateException("Cannot cancel reservation that is not in PAID status");
-        }
-
-        boolean isLessThanOneHour = isLessThanOneHourBefore(LocalDateTime.now());
-        boolean fullRefund = isEntitledToCancelWithFullRefund || !isLessThanOneHour;
-
-        addDomainEvent(ReservationCancelledEvent.create(id, userId, showTimeId, fullRefund));
-        this.status = ReservationStatus.CANCELLED;
-        incrementVersion();
-    }
-
     // invariants - rules controlled by aggregate, no ext deps needed
     private void ensureReservationCoreRulesAreRespected() {
         if (reservedSeats.isEmpty()) {
@@ -74,6 +52,30 @@ public final class Reservation {
         if (reservedSeats.size() > 2) {
             throw new IllegalStateException("Reservation cannot have more than 2 seats");
         }
+    }
+
+    public void confirm() {
+        if (this.status != ReservationStatus.CREATED) {
+            throw new IllegalStateException("Reservation can only be reserved from CREATED state");
+        }
+        this.status = ReservationStatus.PAID;
+        addDomainEvent(new ReservationPaidEvent(getId().value(), Instant.now()));
+        incrementVersion();
+    }
+
+    public void cancel(boolean isEntitledToCancelWithFullRefund) {
+        if (status != ReservationStatus.PAID) {
+            throw new IllegalStateException("Cannot cancel reservation that is not in PAID status");
+        }
+
+        boolean fullRefund = isEntitledToCancelWithFullRefund || !isLessThanOneHourBefore(LocalDateTime.now());
+        this.status = ReservationStatus.CANCELLED;
+        addDomainEvent(ReservationCancelledEvent.create(id, userId, showTimeId, fullRefund));
+        incrementVersion();
+    }
+
+    private boolean isLessThanOneHourBefore(LocalDateTime currentTime) {
+        return screeningTime.isBefore(currentTime.plusHours(1));
     }
 
     void addDomainEvent(DomainEvent event) {
@@ -98,10 +100,6 @@ public final class Reservation {
         return new Reservation(id, userId, showTimeId, screeningTime, reservedSeats, status, createdAt, version);
     }
 
-    private boolean isLessThanOneHourBefore(LocalDateTime currentTime) {
-        return screeningTime.isBefore(currentTime.plusHours(1));
-    }
-
     private void incrementVersion() {
         this.version++;
     }
@@ -116,15 +114,6 @@ public final class Reservation {
 
     public ReservationStatus getStatus() {
         return status;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-
-    public Instant getCreatedAt() {
-        return createdAt;
     }
 
     @Override
