@@ -65,6 +65,7 @@ public final class Reservation {
         incrementVersion();
     }
 
+    // invariants - rules controlled by aggregate, no ext deps needed
     private void ensureReservationCoreRulesAreRespected() {
         if (reservedSeats.isEmpty()) {
             throw new IllegalStateException("Reservation must have at least one seat");
